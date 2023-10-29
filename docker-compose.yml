@@ -1,11 +1,11 @@
-version: "3"
+version: "3.4"
 
 volumes:
   pgsql:
     driver: local
 
 networks:
-  quiz-network:
+  network:
     driver: bridge
 
 services:
@@ -14,6 +14,7 @@ services:
     build:
       context: ./
       dockerfile: ./docker/php/Dockerfile
+      target: quiz_api_backend
     restart: unless-stopped
     tty: true
     depends_on:
@@ -22,14 +23,87 @@ services:
     volumes:
       - ./:/var/www
     networks:
-      - quiz-network
+      - network
+    env_file:
+      - ./.env
     environment:
-      APP_ENV: local
-      CONTAINER_ROLE: app
-      CACHE_DRIVER: redis
-      SESSION_DRIVER: redis
-      QUEUE_DRIVER: redis
-      REDIS_HOST: redis
+      CONTAINER_ROLE: backend
+  
+  migrate:
+    container_name: quiz_api_migrate
+    build:
+      context: ./
+      dockerfile: ./docker/php/Dockerfile
+      target: quiz_api_roles
+    restart: on-failure
+    tty: true
+    depends_on:
+      - backend
+    volumes:
+      - ./:/var/www
+    networks:
+      - network
+    env_file:
+      - ./.env
+    environment:
+      CONTAINER_ROLE: migrate
+
+  #scheduler:
+  #  container_name: quiz_api_scheduler
+  #  build:
+  #    context: ./
+  #    dockerfile: ./docker/php/Dockerfile
+  #    target: quiz_api_roles
+  #  restart: unless-stopped
+  #  tty: true
+  #  depends_on:
+  #    - backend
+  #  volumes:
+  #    - ./:/var/www/html
+  #  networks:
+  #    - network
+  #  env_file:
+  #    - ./.env
+  #  environment:
+  #    CONTAINER_ROLE: scheduler
+
+  queue:
+    container_name: quiz_api_queue
+    build:
+      context: ./
+      dockerfile: ./docker/php/Dockerfile
+      target: quiz_api_roles
+    restart: unless-stopped
+    tty: true
+    depends_on:
+      - backend
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - network
+    env_file:
+      - ./.env
+    environment:
+      CONTAINER_ROLE: queue
+
+  websockets:
+    container_name: quiz_api_websockets
+    build:
+      context: ./
+      dockerfile: ./docker/php/Dockerfile
+      target: quiz_api_roles
+    restart: unless-stopped
+    tty: true
+    depends_on:
+      - backend
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - network
+    env_file:
+      - ./.env
+    environment:
+      CONTAINER_ROLE: websockets
 
   webserver:
     image: nginx:1.25.3
@@ -45,7 +119,7 @@ services:
       - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
     networks:
-      - quiz-network
+      - network
 
   redis:
     image: redis:7.2.2-alpine
@@ -55,7 +129,7 @@ services:
     ports:
       - '${FORWARD_REDIS_PORT:-6379}:6379'
     networks:
-      - quiz-network
+      - network
 
   pgsql:
     image: 'postgres:16.0-alpine'
@@ -70,7 +144,7 @@ services:
     volumes:
       - 'pgsql:/var/lib/postgresql/data'
     networks:
-      - quiz-network
+      - network
     healthcheck:
       test:
         [

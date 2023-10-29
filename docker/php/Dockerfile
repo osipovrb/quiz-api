@@ -1,4 +1,4 @@
-FROM php:8.2-fpm-alpine
+FROM php:8.2-fpm-alpine AS quiz_api_backend
 
 WORKDIR /var/www
 
@@ -18,7 +18,8 @@ RUN apk update && apk add \
     libcurl \
     curl-dev \
     curl \
-    postgresql-dev
+    postgresql-dev \
+    bash
 
 RUN docker-php-ext-install pdo_pgsql mbstring zip exif pcntl intl curl
 
@@ -30,7 +31,13 @@ RUN addgroup -g 1000 -S www && \
     adduser -u 1000 -S www -G www
 
 COPY --chown=www:www . /var/www
+COPY ./docker/start.sh /usr/local/bin/start
+RUN ["chmod", "+x", "/usr/local/bin/start"]
 
 USER www
 
 EXPOSE 9000
+
+FROM quiz_api_backend AS quiz_api_roles
+
+CMD ["/usr/local/bin/start"]
