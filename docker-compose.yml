@@ -28,25 +28,6 @@ services:
       - ./.env
     environment:
       CONTAINER_ROLE: backend
-  
-  migrate:
-    container_name: quiz_api_migrate
-    build:
-      context: ./
-      dockerfile: ./docker/php/Dockerfile
-      target: quiz_api_roles
-    restart: on-failure
-    tty: true
-    depends_on:
-      - backend
-    volumes:
-      - ./:/var/www
-    networks:
-      - network
-    env_file:
-      - ./.env
-    environment:
-      CONTAINER_ROLE: migrate
 
   #scheduler:
   #  container_name: quiz_api_scheduler

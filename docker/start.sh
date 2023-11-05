@@ -5,11 +5,7 @@ set -e
 role=${CONTAINER_ROLE:-app}
 env=${APP_ENV:-production}
  
-if [ "$role" = "migrate" ]; then
-    echo "Running migrate..."
-    php /var/www/artisan migrate
-    exit 0
-elif [ "$role" = "websockets" ]; then
+if [ "$role" = "websockets" ]; then
     echo "Running websockets..."
     php /var/www/artisan websockets:serve
 elif [ "$role" = "queue" ]; then
