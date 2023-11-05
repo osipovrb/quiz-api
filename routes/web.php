@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use BeyondCode\LaravelWebSockets\Facades\WebSocketsRouter;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -13,10 +13,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
 Route::get('/ping', function () {
     return 'pong';
 });
+
+WebSocketsRouter::webSocket('/chat', \App\Websocket\Chat::class);

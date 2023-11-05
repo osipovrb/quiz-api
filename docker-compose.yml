@@ -112,6 +112,7 @@ services:
     tty: true
     ports:
       - '${FORWARD_NGINX_PORT:-8080}:80'
+      - '${FORWARD_WS_PORT:-6001}:6001'
     depends_on:
       - backend
     volumes:
